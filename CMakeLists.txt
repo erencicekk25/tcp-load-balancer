@@ -54,3 +54,15 @@ if(MSVC)
 else()
     target_compile_options(tcp-load-balancer PRIVATE -Wall -Wextra -Wpedantic -Wshadow)
 endif()
+
+# ---------------------------------------------------------------------------
+# Tests: scheduler unit tests + end-to-end runs against real loopback backends
+# ---------------------------------------------------------------------------
+option(TLB_BUILD_TESTS "Build the test suite" ON)
+if(TLB_BUILD_TESTS)
+    enable_testing()
+    add_executable(tlb_tests tests/LoadBalancerTests.cpp)
+    target_link_libraries(tlb_tests PRIVATE tlb_core)
+    add_test(NAME tlb_tests COMMAND tlb_tests)
+    set_tests_properties(tlb_tests PROPERTIES TIMEOUT 120)
+endif()
