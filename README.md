@@ -1,5 +1,6 @@
 # tcp-load-balancer
 
+[![CI](https://github.com/erencicekk25/tcp-load-balancer/actions/workflows/ci.yml/badge.svg)](https://github.com/erencicekk25/tcp-load-balancer/actions/workflows/ci.yml)
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=cplusplus&logoColor=white)
 ![CMake](https://img.shields.io/badge/build-CMake-064F8C?logo=cmake&logoColor=white)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
@@ -53,6 +54,21 @@ cmake --build build
 ```
 
 > **Windows notu:** Proje klasörünün yolunda Türkçe karakter (ş, ı, ğ vb.) varsa MinGW Makefiles üreticisi derleme sırasında hata verebilir. Bu durumda projeyi ASCII karakterli bir dizine taşımanız ya da `-G Ninja` / Visual Studio üreticisini kullanmanız yeterli.
+
+### Testler
+
+```bash
+ctest --test-dir build --output-on-failure
+```
+
+Test paketi harici bir kütüphaneye ihtiyaç duymuyor. Round-Robin zamanlayıcıyı birim testleriyle kontrol ettikten sonra, loopback üzerinde rastgele portlarda gerçek backend'ler ayağa kaldırıp yük dengeleyiciyi uçtan uca deniyor:
+
+- Bağlantıların backend'lere gerçekten `alpha → beta → gamma → alpha ...` sırasıyla dağıtılması
+- Kapalı bir backend'in otomatik olarak atlanması (failover) ve sağlıksız olarak işaretlenmesi
+- 1 MB'lık bir verinin iki yönde de bayt bayt bozulmadan taşınması ve sayaçların doğru tutulması
+- `stop()` çağrısından sonra olay döngüsünün hızla kapanması
+
+GitHub Actions her push'ta bu testleri Linux, macOS ve Windows'ta, ayrıca Linux'ta AddressSanitizer + UndefinedBehaviorSanitizer ile çalıştırıyor.
 
 ### Çalıştırma
 
@@ -265,10 +281,13 @@ tcp-load-balancer/
 ├── include/
 │   ├── LoadBalancer.hpp    # Motorun public arayüzü, config ve istatistik tipleri
 │   └── SocketUtils.hpp     # Platformdan bağımsız soket soyutlaması
-└── src/
-    ├── LoadBalancer.cpp    # Olay döngüsü, Round-Robin, failover, veri aktarımı
-    ├── SocketUtils.cpp     # Winsock / POSIX implementasyonu
-    └── main.cpp            # Simüle backend'ler + test istemcisi içeren CLI demo
+├── src/
+│   ├── LoadBalancer.cpp    # Olay döngüsü, Round-Robin, failover, veri aktarımı
+│   ├── SocketUtils.cpp     # Winsock / POSIX implementasyonu
+│   └── main.cpp            # Simüle backend'ler + test istemcisi içeren CLI demo
+├── tests/
+│   └── LoadBalancerTests.cpp  # Zamanlayıcı birim testleri + uçtan uca testler
+└── .github/workflows/ci.yml   # Linux / macOS / Windows + sanitizer CI
 ```
 
 ### Motoru kendi projenizde kullanmak
